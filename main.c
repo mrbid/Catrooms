@@ -107,7 +107,6 @@ uint free_look = 0;
 double sens = 0.003;
 double mx,my,lx,ly;
 float xrot = 0.f;
-float yrot = 1.3f;
 vec lookx, lookz;
 
 // level
