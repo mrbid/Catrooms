@@ -100,8 +100,8 @@ uint winw=1024, winh=768, ks[4]={0};
 float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
 
 // camera vars
-#define FAR_DISTANCE 20.f
-#define DRAW_DISTANCE 225.f // FAR_DISTANCE*FAR_DISTANCE
+#define FAR_DISTANCE 100.f
+#define DRAW_DISTANCE 225.f // 15*15
 uint lock_mouse = 0;
 uint free_look = 0;
 double sens = 0.003;
@@ -118,14 +118,22 @@ const uint wall_size = 2970;
 
 // player
 #define MOVE_SPEED 3.3f
+#define STRAFE_SPEED 2.2f
 float px=0.f, py=0.f;
+
+// pickup
+uint pid; // pickup id
+float pix, piy;
 
 //*************************************
 // game functions
 //*************************************
 void resetGame(uint mode)
 {
-    //
+    px=0.f, py=0.f;
+    const uint pi = esRand(0, 2054)*2;
+    pix = level_floor[pi], piy = level_floor[pi+1];
+    pid = 10;
 
     if(mode == 1){char strts[16];timestamp(&strts[0]);printf("[%s] Game Reset.\n", strts);}
     glfwSetWindowTitle(wnd, appTitle);
@@ -154,8 +162,8 @@ void main_loop()
     // player inputs
     mGetViewX(&lookx, view);
     float fms = MOVE_SPEED;
-    /**/ if(ks[0]==1){px -= lookx.x * MOVE_SPEED * dt, py -= lookx.y * MOVE_SPEED * dt; fms=MOVE_SPEED*0.5f;} // A
-    else if(ks[1]==1){px += lookx.x * MOVE_SPEED * dt, py += lookx.y * MOVE_SPEED * dt; fms=MOVE_SPEED*0.5f;} // D
+    /**/ if(ks[0]==1){px -= lookx.x * MOVE_SPEED * dt, py -= lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // A
+    else if(ks[1]==1){px += lookx.x * MOVE_SPEED * dt, py += lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // D
     /**/ if(ks[2]==1){px -= lookz.x * MOVE_SPEED * dt, py -= lookz.y * fms * dt;} // W
     else if(ks[3]==1){px += lookz.x * MOVE_SPEED * dt, py += lookz.y * fms * dt;} // S
 
@@ -232,6 +240,79 @@ void main_loop()
             updateModelView();
             esRenderModel();
         }
+    }
+
+    // change bg/clear color based on distance from pickup
+    // {
+    //     const float xm = px+pix;
+    //     const float ym = py+piy;
+    //     const float d = xm*xm + ym*ym;
+    //     if(d < 1089.f) // 33*33
+    //         glClearColor(1.f-(0.000918274f*d), 0.f, 0.f, 0.f);
+    // }
+
+    // render pickup
+    {
+        const float xm = px+pix;
+        const float ym = py+piy;
+        const float d = xm*xm + ym*ym;
+        if(d < DRAW_DISTANCE)
+        {
+            mIdent(&model);
+            mSetPos(&model, (vec){pix, piy, 0.f});
+            updateModelView();
+            esBindRender(pid);
+        }
+    }
+
+    // render pickup finder
+    {
+        float height = 6.f;
+        const float xm = px+pix;
+        const float ym = py+piy;
+        const float d = xm*xm + ym*ym;
+        if(d < 196.f){height -= 4.f-(d*0.020408163f);}
+
+        mIdent(&model);
+        vec dirn = (vec){-px, -py, 0.5f};
+        const vec origin = (vec){pix, piy, height};
+        vSub(&dirn, dirn, origin);
+        vNorm(&dirn);
+        static const vec up = (vec){0.f, 1.f, 0.f};
+        vec c;
+        vCross(&c, up, dirn);
+        vNorm(&c);
+        vec rup;
+        vCross(&rup, dirn, c);
+        model.m[0][0] = c.x;
+        model.m[0][1] = c.y;
+        model.m[0][2] = c.z;
+        model.m[2][0] = -rup.x;
+        model.m[2][1] = -rup.y;
+        model.m[2][2] = -rup.z;
+        model.m[1][0] = dirn.x;
+        model.m[1][1] = dirn.y;
+        model.m[1][2] = dirn.z;
+        model.m[3][0] = origin.x;
+        model.m[3][1] = origin.y;
+        model.m[3][2] = origin.z;
+
+        // model.m[0][0] = c.x;
+        // model.m[0][1] = c.y;
+        // model.m[0][2] = c.z;
+        // model.m[2][0] = rup.x;
+        // model.m[2][1] = rup.y;
+        // model.m[2][2] = rup.z;
+        // model.m[1][0] = -dirn.x;
+        // model.m[1][1] = -dirn.y;
+        // model.m[1][2] = -dirn.z;
+        // model.m[3][0] = origin.x;
+        // model.m[3][1] = origin.y;
+        // model.m[3][2] = origin.z;
+
+        updateModelView();
+        //glClear(GL_DEPTH_BUFFER_BIT);
+        esBindRender(23);
     }
 
     ///
@@ -373,9 +454,9 @@ int main(int argc, char** argv)
 //*************************************
 // bind vertex and index buffers
 //*************************************
-    register_wall();register_floor();register_c1();register_c2();register_c3();register_c4();register_c5();
-    register_c6();register_c7();register_c8();register_p1();register_p2();register_p3();register_p4();register_p5();
-    register_p6();register_p7();register_p8();register_p9();register_p10();register_p11();register_p12();register_p14();
+    register_wall();register_floor();register_c1();register_c2();register_c3();register_c4();register_c5();register_c6();
+    register_c7();register_c8();register_p1();register_p2();register_p3();register_p4();register_p5();register_p6();
+    register_p7();register_p8();register_p9();register_p10();register_p11();register_p12();register_p13();register_p14();
     
 //*************************************
 // configure render options
