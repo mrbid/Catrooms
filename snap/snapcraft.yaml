@@ -1,0 +1,42 @@
+name: catrooms
+base: core22
+version: '1.0'
+license: GPL-2.0-only
+summary: Liminal Cat Horror
+description: |
+  Check terminal output when program is executed for more information.
+
+grade: stable
+confinement: strict
+
+architectures:
+  - build-on: [amd64]
+    build-for: [amd64]
+  - build-on: [arm64]
+    build-for: [arm64]
+  - build-on: [armhf]
+    build-for: [armhf]
+
+apps:
+  catrooms:
+    extensions: [gnome]
+    command: catrooms
+    plugs:
+    - desktop
+    - desktop-legacy
+    - gsettings
+    - opengl
+    - wayland
+    - x11
+
+parts:
+  catrooms:
+    source: https://github.com/mrbid/catrooms
+    source-type: git
+    plugin: make
+    source-subdir: snap
+    build-packages:
+    - libglfw3-dev
+    stage-packages:
+    - libglfw3
+    - libgles2

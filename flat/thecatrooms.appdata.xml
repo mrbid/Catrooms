@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>com.voxdsp.TheCatrooms</id>
+	<metadata_license>CC-BY-4.0</metadata_license>
+	<project_license>MIT</project_license>
+	<developer_name>James William Fletcher</developer_name>
+	<launchable type="desktop-id">com.voxdsp.TheCatrooms.desktop</launchable>
+	<name>The Catrooms</name>
+	<summary>Liminal Cat Horror</summary>
+	<description>
+		<p>The Backrooms, catified. Find all 14 trinkets before the cat emojis get you!</p>
+		<ul>
+			<li>controls</li>
+		</ul>
+	</description>
+	<screenshots>
+		<screenshot type="default">
+			<image>https://</image>
+			<caption>test</caption>
+		</screenshot>
+	</screenshots>
+	<url type="homepage">https://github.com/mrbid/catrooms</url>
+	<releases>
+		<release version="1.0" date="2024-07-06" />
+	</releases>
+	<content_rating type="oars-1.0" />
+</component>
