@@ -251,21 +251,48 @@ void main_loop()
     //         glClearColor(1.f-(0.000918274f*d), 0.f, 0.f, 0.f);
     // }
 
-    // render pickup
+    // render pickup & collision
+    if(pid <= 23)
     {
+        static float ft = 0.f;
         const float xm = px+pix;
         const float ym = py+piy;
         const float d = xm*xm + ym*ym;
+        if(d < 1.f && ft == 0.f)
+        {
+            ft = t+1.f;
+            if(pid > 23)
+            {
+                // something special
+            }
+        }
         if(d < DRAW_DISTANCE)
         {
             mIdent(&model);
             mSetPos(&model, (vec){pix, piy, 0.f});
             updateModelView();
-            esBindRender(pid);
+            if(ft != 0.f)
+            {
+                const float ftd = ft-t;
+                printf("%f\n",  ftd);
+                if(ftd <= 0.f)
+                {
+                    ft = 0.f;
+                    pid++;
+                    const uint pi = esRand(0, 2054)*2;
+                    pix = level_floor[pi], piy = level_floor[pi+1];
+                }
+                glEnable(GL_BLEND);
+                glUniform1f(opacity_id, ftd);
+                esBindRender(pid);
+                glDisable(GL_BLEND);
+            }
+            else{esBindRender(pid);}
         }
     }
 
     // render pickup finder
+    if(pid <= 22)
     {
         float height = 6.f;
         const float xm = px+pix;
