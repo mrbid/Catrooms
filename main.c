@@ -263,7 +263,7 @@ void main_loop()
             ft = t+1.f;
             if(pid > 23)
             {
-                // something special
+                // make cats run from you?
             }
         }
         if(d < DRAW_DISTANCE)
@@ -274,7 +274,6 @@ void main_loop()
             if(ft != 0.f)
             {
                 const float ftd = ft-t;
-                printf("%f\n",  ftd);
                 if(ftd <= 0.f)
                 {
                     ft = 0.f;
