@@ -410,6 +410,8 @@ int main(int argc, char** argv)
     printf("James William Fletcher (github.com/mrbid)\n");
     printf("%s - Inspired by The Backrooms & Nextbots.\n", appTitle);
     printf("----\n");
+    printf("Follow the floating eye to obtain the trinkets before the demonic cats get to you!! There are 14 trinkets in total and the final trinket will have no floating eye to guide you!\n");
+    printf("----\n");
     int msaa = 16;
 #ifndef WEB
     if(argc >= 2){msaa = atoi(argv[1]);}
