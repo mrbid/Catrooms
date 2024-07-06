@@ -100,8 +100,8 @@ uint winw=1024, winh=768, ks[4]={0};
 float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
 
 // camera vars
-#define FAR_DISTANCE 14.f
-#define DRAW_DISTANCE 196.f // FAR_DISTANCE*FAR_DISTANCE
+#define FAR_DISTANCE 15.f
+#define DRAW_DISTANCE 225.f // FAR_DISTANCE*FAR_DISTANCE
 uint lock_mouse = 0;
 uint free_look = 0;
 double sens = 0.003;
@@ -166,9 +166,6 @@ void main_loop()
         glfwGetCursorPos(wnd, &mx, &my);
         static float sx=0.0,sy=0.0; // mouse smoothing
         sx = ((float)((lx-mx)*sens)+sx)*0.5f, xrot += sx, lx = mx;
-        sy = ((float)((ly-my)*sens)+sy)*0.5f, yrot += sy, ly = my;
-        if(free_look > 0){if(yrot > PI  ){yrot = PI;  }else if(yrot < 0.f ){yrot = 0.f; }}
-        else/* regular */{if(yrot > d2PI){yrot = d2PI;}else if(yrot < 0.5f){yrot = 0.5f;}}
     }
     mIdent(&view);
     mRotate(&view, d2PI, 1.f, 0.f, 0.f);
