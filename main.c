@@ -100,7 +100,7 @@ uint winw=1024, winh=768, ks[4]={0};
 float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
 
 // camera vars
-#define FAR_DISTANCE 15.f
+#define FAR_DISTANCE 20.f
 #define DRAW_DISTANCE 225.f // FAR_DISTANCE*FAR_DISTANCE
 uint lock_mouse = 0;
 uint free_look = 0;
