@@ -100,7 +100,8 @@ uint winw=1024, winh=768, ks[4]={0};
 float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
 
 // camera vars
-#define FAR_DISTANCE 777.f
+#define FAR_DISTANCE 14.f
+#define DRAW_DISTANCE 196.f // FAR_DISTANCE*FAR_DISTANCE
 uint lock_mouse = 0;
 uint free_look = 0;
 double sens = 0.003;
@@ -153,10 +154,11 @@ void main_loop()
 
     // player inputs
     mGetViewX(&lookx, view);
-    /**/ if(ks[2]==1){px -= lookz.x * MOVE_SPEED * dt, py -= lookz.y * MOVE_SPEED * dt;} // W
-    else if(ks[3]==1){px += lookz.x * MOVE_SPEED * dt, py += lookz.y * MOVE_SPEED * dt;} // S
-    /**/ if(ks[0]==1){px -= lookx.x * MOVE_SPEED * dt, py -= lookx.y * MOVE_SPEED * dt;} // A
-    else if(ks[1]==1){px += lookx.x * MOVE_SPEED * dt, py += lookx.y * MOVE_SPEED * dt;} // D
+    float fms = MOVE_SPEED;
+    /**/ if(ks[0]==1){px -= lookx.x * MOVE_SPEED * dt, py -= lookx.y * MOVE_SPEED * dt; fms=MOVE_SPEED*0.5f;} // A
+    else if(ks[1]==1){px += lookx.x * MOVE_SPEED * dt, py += lookx.y * MOVE_SPEED * dt; fms=MOVE_SPEED*0.5f;} // D
+    /**/ if(ks[2]==1){px -= lookz.x * MOVE_SPEED * dt, py -= lookz.y * fms * dt;} // W
+    else if(ks[3]==1){px += lookz.x * MOVE_SPEED * dt, py += lookz.y * fms * dt;} // S
 
     // camera
     if(lock_mouse == 1)
@@ -187,14 +189,21 @@ void main_loop()
     ///
 
     // render level
-    // esBindModel(1);
-    // for(uint i = 0; i < floor_size; i+=2)
-    // {
-    //     mIdent(&model);
-    //     mSetPos(&model, (vec){level_floor[i], level_floor[i+1], 0.f});
-    //     updateModelView();
-    //     esRenderModel();
-    // }
+    esBindModel(1);
+    for(uint i = 0; i < floor_size; i+=2)
+    {
+        // render view distance
+        const float xm = px+level_floor[i];
+        const float ym = py+level_floor[i+1];
+        const float d = xm*xm + ym*ym;
+        if(d < DRAW_DISTANCE)
+        {
+            mIdent(&model);
+            mSetPos(&model, (vec){level_floor[i], level_floor[i+1], 0.f});
+            updateModelView();
+            esRenderModel();
+        }
+    }
     esBindModel(0);
     for(uint i = 0; i < wall_size; i+=2)
     {
@@ -216,41 +225,17 @@ void main_loop()
             }
         }
 
-        // you can see how I worked this out here.
-        // if(xif && yif)
-        // {
-        //     if(xif)
-        //     {
-        //         if(xd < 0.f)
-        //         {
-        //             printf("[%u] lx: %f %f\n", i, xd, 0.6f+xd);
-        //             px -= 0.6f+xd;
-        //         }
-        //         else
-        //         {
-        //             printf("[%u] mx: %f %f\n", i, xd, 0.6f-xd);
-        //             px += 0.6f-xd;
-        //         }
-        //     }
-        //     if(yif)
-        //     {
-        //         if(yd < 0.f)
-        //         {
-        //             printf("[%u] ly: %f %f\n", i, yd, 0.6f+yd);
-        //             py -= 0.6f+yd;
-        //         }
-        //         else
-        //         {
-        //             printf("[%u] my: %f %f\n", i, yd, 0.6f-yd);
-        //             py += 0.6f-yd;
-        //         }
-        //     }
-        // }
-
-        mIdent(&model);
-        mSetPos(&model, (vec){level_wall[i], level_wall[i+1], 0.f});
-        updateModelView();
-        esRenderModel();
+        // render view distance
+        const float xm = px+level_wall[i];
+        const float ym = py+level_wall[i+1];
+        const float d = xm*xm + ym*ym;
+        if(d < DRAW_DISTANCE)
+        {
+            mIdent(&model);
+            mSetPos(&model, (vec){level_wall[i], level_wall[i+1], 0.f});
+            updateModelView();
+            esRenderModel();
+        }
     }
 
     ///
