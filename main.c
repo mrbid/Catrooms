@@ -102,7 +102,7 @@ float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect, ww, wh, rww, rwh;
 
 // camera vars
 #define FAR_DISTANCE 100.f
-#define DRAW_DISTANCE 225.f // 15*15
+float DRAW_DISTANCE = 225.f; // 15*15
 uint lock_mouse = 0;
 uint istouch = 0;
 double sens = 0.003;
@@ -166,8 +166,8 @@ void main_loop()
     {
         float ttdx = tdx * 8.f;
         float ttdy = tdy * 6.f;
-        if(ww > wh){ttdx *= ww/wh;}
-        if(wh > ww){ttdy *= wh/ww;}
+        if(ww > wh){ttdx *= ww*rwh;}
+        if(wh > ww){ttdy *= wh*rww;}
         if(ttdx > MOVE_SPEED){ttdx = MOVE_SPEED;}
         else if(ttdx < -MOVE_SPEED){ttdx = -MOVE_SPEED;}
         if(ttdy > MOVE_SPEED){ttdy = MOVE_SPEED;}
@@ -409,7 +409,8 @@ void mouse_button_callback(GLFWwindow* wnd, int button, int action, int mods)
         if(lock_mouse == 0)
         {
             lock_mouse = 1;
-            istouch = 0; // could be bad
+            // istouch = 0;
+            // DRAW_DISTANCE = 225.f;
 #ifndef WEB
             glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             glfwGetCursorPos(wnd, &lx, &ly);
@@ -445,20 +446,19 @@ EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent,
 }
 EM_BOOL emscripten_touchstart_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
 {
-    if(istouch == 0){istouch = 1;}
-    if(touchEvent->touches[0].clientX*rww > 0.5f) // look side
-    {
-        lx = touchEvent->touches[0].clientX;
-        ly = touchEvent->touches[0].clientY;
-        mx = lx;
-        my = ly;
-        sens = 0.006f;
-    }
-    else // move side
-    {
-        tsx = touchEvent->touches[0].clientX*rww;
-        tsy = touchEvent->touches[0].clientY*rwh;
-    }
+    if(istouch == 0){istouch = 1; DRAW_DISTANCE = 64.f;}
+
+    // look
+    lx = touchEvent->touches[0].clientX;
+    ly = touchEvent->touches[0].clientY;
+    mx = lx;
+    my = ly;
+    sens = 0.006f;
+
+    //move
+    tsx = touchEvent->touches[1].clientX*rww;
+    tsy = touchEvent->touches[1].clientY*rwh;
+
     return EM_FALSE;
 }
 EM_BOOL emscripten_touchend_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
@@ -468,17 +468,18 @@ EM_BOOL emscripten_touchend_event(int eventType, const EmscriptenTouchEvent *tou
 }
 EM_BOOL emscripten_touchmove_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
 {
-    if(touchEvent->touches[0].clientX*rww > 0.5f)
+    // look
+    mx = touchEvent->touches[0].clientX;
+    my = touchEvent->touches[0].clientY;
+    //printf("T: %f %f\n", mx, my);
+    
+    // move
+    if(tsx != 0.f && tsy != 0.f)
     {
-        mx = touchEvent->touches[0].clientX;
-        my = touchEvent->touches[0].clientY;
-        //printf("T: %f %f\n", mx, my);
+        tdx = tsx-(touchEvent->touches[1].clientX*rww);
+        tdy = tsy-(touchEvent->touches[1].clientY*rwh);
     }
-    else if(tsx != 0.f && tsy != 0.f)
-    {
-        tdx = (tsx-(touchEvent->touches[0].clientX*rww))*3.f;
-        tdy = (tsy-(touchEvent->touches[0].clientY*rwh))*3.f;
-    }
+
     return EM_FALSE;
 }
 #endif
