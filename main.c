@@ -126,6 +126,9 @@ float px=0.f, py=0.f;
 uint pid; // pickup id
 float pix, piy;
 
+// cats
+float cx[8], cy[8], cdx[8], cdy[8]; // pos, dir
+
 //*************************************
 // game functions
 //*************************************
@@ -135,6 +138,12 @@ void resetGame(uint mode)
     const uint pi = esRand(0, 2054)*2;
     pix = level_floor[pi], piy = level_floor[pi+1];
     pid = 10;
+
+    for(uint i=0; i < 8; i++)
+    {
+        const uint pi = esRand(0, 2054)*2;
+        cx[i] = level_floor[pi], cy[i] = level_floor[pi+1];
+    }
 
     if(mode == 1){char strts[16];timestamp(&strts[0]);printf("[%s] Game Reset.\n", strts);}
     glfwSetWindowTitle(wnd, appTitle);
@@ -266,6 +275,60 @@ void main_loop()
     //     if(d < 1089.f) // 33*33
     //         glClearColor(1.f-(0.000918274f*d), 0.f, 0.f, 0.f);
     // }
+
+    // render cats
+    for(uint i=0; i < 8; i++)
+    {
+        // move
+        cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;
+
+        // cats need to brain melt too obviously
+        for(uint j=0; j < wall_size; j+=2)
+        {
+            const float xd = cx[i]-level_wall[j], yd = cy[i]-level_wall[j+1];
+            const float fxd = fabsf(xd), fyd = fabsf(yd);
+            const uint xif = fxd < 1.0f, yif = fyd < 1.0f;
+            if(xif && yif)
+            {
+                if(xif && fxd > fyd)
+                {
+                    if(xd < 0.f){cx[i] -= 1.0f+xd;}
+                            else{cx[i] += 1.0f-xd;}
+                }
+                if(yif && fyd > fxd)
+                {
+                    if(yd < 0.f){cy[i] -= 1.0f+yd;}
+                            else{cy[i] += 1.0f-yd;}
+                }
+            }
+        }
+
+        // render cat looking at player
+        mIdent(&model);
+        mSetPos(&model, (vec){cx[i], cy[i], 0.f});
+        cdx[i] = cx[i]+px, cdy[i] = cy[i]+py;
+        const float len = 1.f/sqrtf(cdx[i]*cdx[i] + cdy[i]*cdy[i]);
+        cdx[i] *= len;
+        cdy[i] *= len;
+        static const vec up_norm = (vec){0.f, 0.f, 1.f};
+        const vec dir_norm = (vec){cdx[i], cdy[i], 0.5f};
+        vec c;
+        vCross(&c, up_norm, dir_norm);
+        vNorm(&c);
+        vec rup;
+        vCross(&rup, dir_norm, c);
+        model.m[0][0] = c.x;
+        model.m[0][1] = c.y;
+        model.m[0][2] = c.z;
+        model.m[2][0] = rup.x;
+        model.m[2][1] = rup.y;
+        model.m[2][2] = rup.z;
+        model.m[1][0] = -dir_norm.x;
+        model.m[1][1] = -dir_norm.y;
+        model.m[1][2] = -dir_norm.z;
+        updateModelView();
+        esBindRender(2+i);
+    }
 
     // render pickup & collision
     if(pid <= 23)
