@@ -627,7 +627,7 @@ int main(int argc, char** argv)
     printf("James William Fletcher (github.com/mrbid)\n");
     printf("%s - Inspired by The Backrooms & Nextbots.\n", appTitle);
     printf("----\n");
-    printf("Follow the floating eye to obtain the trinkets before the demonic cats get to you!! There are 14 trinkets in total and the final trinket will have no floating eye to guide you, instead the sky will turn more red the closer you are to it!\n");
+    printf("Follow the floating eye to obtain the trinkets before the demonic cats get to you!! There are 14 trinkets in total and the final trinket will have no floating eye to guide you, instead the sky will turn more red the closer you are to it! Once you have won the game the sky will turn yellow.\n");
     printf("----\n");
     int msaa = 16;
 #ifndef WEB
