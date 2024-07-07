@@ -471,8 +471,8 @@ EM_BOOL emscripten_touchmove_event(int eventType, const EmscriptenTouchEvent *to
     // move
     if(tsx != 0.f && tsy != 0.f)
     {
-        tdx = (tsx-(touchEvent->touches[0].clientX*rww))*2.f;
-        tdy = (tsy-(touchEvent->touches[0].clientY*rwh))*2.f;
+        tdx = tsx-(touchEvent->touches[0].clientX*rww);
+        tdy = tsy-(touchEvent->touches[0].clientY*rwh);
     }
 
     // look
