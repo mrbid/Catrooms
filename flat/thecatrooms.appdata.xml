@@ -9,14 +9,17 @@
 	<summary>Liminal Cat Horror</summary>
 	<description>
 		<p>The Backrooms, catified. Find all 14 trinkets before the cat emojis get you!</p>
+		<p>Follow the floating eye to obtain the trinkets before the demonic cats get to you!! There are 14 trinkets in total and the final trinket will have no floating eye to guide you, instead the sky will turn more red the closer you are to it! Once you have won the game the sky will turn yellow.</p>
 		<ul>
-			<li>controls</li>
+			<li>ESCAPE to release mouse lock.</li>
+			<li>Mouse Move to Look Around.</li>
+			<li>Arrow Keys or WASD to Move Around.</li>
 		</ul>
 	</description>
 	<screenshots>
 		<screenshot type="default">
-			<image>https://</image>
-			<caption>test</caption>
+			<image>https://raw.githubusercontent.com/mrbid/Catrooms/main/screenshot.png</image>
+			<caption>End Game View, you play in first-person.</caption>
 		</screenshot>
 	</screenshots>
 	<url type="homepage">https://github.com/mrbid/catrooms</url>
