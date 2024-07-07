@@ -120,14 +120,18 @@ const uint wall_size = 2970;
 // player
 #define MOVE_SPEED 3.3f
 #define STRAFE_SPEED 2.2f
+#define CAT_SPEED 1.2f
 float px=0.f, py=0.f;
+float caught=0.f;
 
 // pickup
 uint pid; // pickup id
 float pix, piy;
 
 // cats
-float cx[8], cy[8], cdx[8], cdy[8]; // pos, dir
+float cx[8], cy[8], lcx[8], lcy[8], cdx[8], cdy[8]; // pos, last_pos, dir
+float cnt[8]; // cat next time (stuck checker)
+uint cm[8]; // cat mode, persuit or roam
 
 //*************************************
 // game functions
@@ -135,17 +139,21 @@ float cx[8], cy[8], cdx[8], cdy[8]; // pos, dir
 void resetGame(uint mode)
 {
     px=0.f, py=0.f;
-    const uint pi = esRand(0, 2054)*2;
+    const uint pi = esRand(0, 2053)*2;
     pix = level_floor[pi], piy = level_floor[pi+1];
     pid = 10;
+    caught = 0.f;
 
     for(uint i=0; i < 8; i++)
     {
-        const uint pi = esRand(0, 2054)*2;
+        const uint pi = esRand(0, 2053)*2;
         cx[i] = level_floor[pi], cy[i] = level_floor[pi+1];
+        lcx[i] = cx[i], lcy[i] = cy[i];
+        cdx[i]=1, cdy[i]=0;
+        cm[i] = t+1.f;
     }
 
-    if(mode == 1){char strts[16];timestamp(&strts[0]);printf("[%s] Game Reset.\n", strts);}
+    if(mode == 1){char strts[16];timestamp(&strts[0]);printf("[%s] Game Reset, you lose.\n", strts);}
     glfwSetWindowTitle(wnd, appTitle);
 }
 
@@ -187,11 +195,14 @@ void main_loop()
 #endif
 
     // player inputs
-    float fms = MOVE_SPEED;
-    /**/ if(ks[0]==1){px -= lookx.x * STRAFE_SPEED * dt, py -= lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // A
-    else if(ks[1]==1){px += lookx.x * STRAFE_SPEED * dt, py += lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // D
-    /**/ if(ks[2]==1){px -= lookz.x * fms * dt, py -= lookz.y * fms * dt;} // W
-    else if(ks[3]==1){px += lookz.x * fms * dt, py += lookz.y * fms * dt;} // S
+    if(caught == 0.f)
+    {
+        float fms = MOVE_SPEED;
+        /**/ if(ks[0]==1){px -= lookx.x * STRAFE_SPEED * dt, py -= lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // A
+        else if(ks[1]==1){px += lookx.x * STRAFE_SPEED * dt, py += lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // D
+        /**/ if(ks[2]==1){px -= lookz.x * fms * dt, py -= lookz.y * fms * dt;} // W
+        else if(ks[3]==1){px += lookz.x * fms * dt, py += lookz.y * fms * dt;} // S
+    }
 
     // camera
     if(lock_mouse == 1 || istouch == 1)
@@ -200,9 +211,20 @@ void main_loop()
         sx = ((float)((lx-mx)*sens)+sx)*0.5f, xrot += sx, lx = mx;
     }
     mIdent(&view);
-    mRotate(&view, d2PI, 1.f, 0.f, 0.f);
-    mRotate(&view, xrot, 0.f, 0.f, 1.f);
-    mTranslate(&view, px, py, -0.5f);
+    if(caught != 0.f)
+    {
+        const float dc = caught-t;
+        mRotate(&view, 0.f, 1.f, 0.f, 0.f);
+        mRotate(&view, xrot, 0.f, 0.f, 1.f);
+        mTranslate(&view, px, py, -3.5f-(6.f-dc));
+        if(dc < 0.f){resetGame(1);}
+    }
+    else
+    {
+        mRotate(&view, d2PI, 1.f, 0.f, 0.f);
+        mRotate(&view, xrot, 0.f, 0.f, 1.f);
+        mTranslate(&view, px, py, -0.5f);
+    }
 
     // get look dir/axes
     mGetViewZ(&lookz, view);
@@ -279,26 +301,53 @@ void main_loop()
     // render cats
     for(uint i=0; i < 8; i++)
     {
-        // move
-        cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;
+        // is collide with player?
+        if(caught == 0.f)
+        {
+            const float xm = px+cx[i];
+            const float ym = py+cy[i];
+            const float d = xm*xm + ym*ym;
+            if(d < 1.f){caught=t+6.f;}
+        }
+
+        // is stuck?
+        if(t > cnt[i])
+        {
+            const float xm = cx[i]-lcx[i];
+            const float ym = cy[i]-lcy[i];
+            const float d = xm*xm + ym*ym;
+            cm[i] = d > 1.f;
+            if(cm[i] == 0)
+            {
+                const uint rd = esRand(0, 3);
+                    if(rd == 0){cdx[i]= 1.f, cdy[i]= 0.f;}
+                else if(rd == 1){cdx[i]=-1.f, cdy[i]= 0.f;}
+                else if(rd == 2){cdx[i]= 0.f, cdy[i]= 1.f;}
+                else if(rd == 3){cdx[i]= 0.f, cdy[i]=-1.f;}
+            }
+            lcx[i] = cx[i];
+            lcy[i] = cy[i];
+            cnt[i] = t+esRand(1.f, 3.f);
+        }
 
         // cats need to brain melt too obviously
         for(uint j=0; j < wall_size; j+=2)
         {
+            const float colb = 0.8f;
             const float xd = cx[i]-level_wall[j], yd = cy[i]-level_wall[j+1];
             const float fxd = fabsf(xd), fyd = fabsf(yd);
-            const uint xif = fxd < 1.0f, yif = fyd < 1.0f;
+            const uint xif = fxd < colb, yif = fyd < colb;
             if(xif && yif)
             {
                 if(xif && fxd > fyd)
                 {
-                    if(xd < 0.f){cx[i] -= 1.0f+xd;}
-                            else{cx[i] += 1.0f-xd;}
+                    if(xd < 0.f){cx[i] -= colb+xd;}
+                            else{cx[i] += colb-xd;}
                 }
                 if(yif && fyd > fxd)
                 {
-                    if(yd < 0.f){cy[i] -= 1.0f+yd;}
-                            else{cy[i] += 1.0f-yd;}
+                    if(yd < 0.f){cy[i] -= colb+yd;}
+                            else{cy[i] += colb-yd;}
                 }
             }
         }
@@ -306,10 +355,18 @@ void main_loop()
         // render cat looking at player
         mIdent(&model);
         mSetPos(&model, (vec){cx[i], cy[i], 0.f});
-        cdx[i] = cx[i]+px, cdy[i] = cy[i]+py;
-        const float len = 1.f/sqrtf(cdx[i]*cdx[i] + cdy[i]*cdy[i]);
-        cdx[i] *= len;
-        cdy[i] *= len;
+
+        if(cm[i] == 1)
+        {
+            cdx[i] = cx[i]+px, cdy[i] = cy[i]+py;
+            const float len = 1.f/sqrtf(cdx[i]*cdx[i] + cdy[i]*cdy[i]);
+            cdx[i] *= len;
+            cdy[i] *= len;
+
+            cx[i] -= cdx[i]*CAT_SPEED*dt, cy[i] -= cdy[i]*CAT_SPEED*dt; // move
+        }
+        else{cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;} // move
+
         static const vec up_norm = (vec){0.f, 0.f, 1.f};
         const vec dir_norm = (vec){cdx[i], cdy[i], 0.5f};
         vec c;
@@ -357,7 +414,10 @@ void main_loop()
                 {
                     ft = 0.f;
                     pid++;
-                    const uint pi = esRand(0, 2054)*2;
+                    char nt[256];
+                    sprintf(nt, "🤩 %u 🤩", pid-10);
+                    glfwSetWindowTitle(wnd, nt);
+                    const uint pi = esRand(0, 2053)*2;
                     pix = level_floor[pi], piy = level_floor[pi+1];
                 }
                 glEnable(GL_BLEND);
