@@ -419,7 +419,7 @@ void main_loop()
                         winner=1;
                         glClearColor(1.f, 1.f, 0.f, 0.f);
                         glfwSetWindowTitle(wnd, "🌟 🥂 WINNER 🥂 🌟");
-                        char strts[16];timestamp(&strts[0]);printf("[%s] WINNER! You won!.\n", strts, pid-10);
+                        char strts[16];timestamp(&strts[0]);printf("[%s] WINNER! You won!.\n", strts);
                     }
                     else
                     {
