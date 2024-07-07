@@ -123,6 +123,7 @@ const uint wall_size = 2970;
 #define CAT_SPEED 1.2f
 float px=0.f, py=0.f;
 float caught=0.f;
+uint winner = 0;
 
 // pickup
 uint pid; // pickup id
@@ -145,6 +146,7 @@ void resetGame(uint mode)
     pix = level_floor[pi], piy = level_floor[pi+1];
     pid = 10;
     caught = 0.f;
+    winner = 0;
 
     for(uint i=0; i < 8; i++)
     {
@@ -291,19 +293,20 @@ void main_loop()
     }
 
     // change bg/clear color based on distance from pickup
-    // {
-    //     const float xm = px+pix;
-    //     const float ym = py+piy;
-    //     const float d = xm*xm + ym*ym;
-    //     if(d < 1089.f) // 33*33
-    //         glClearColor(1.f-(0.000918274f*d), 0.f, 0.f, 0.f);
-    // }
+    if(pid == 23)
+    {
+        const float xm = px+pix;
+        const float ym = py+piy;
+        const float d = xm*xm + ym*ym;
+        if(d < 196.f) // 14*14
+            glClearColor(1.f-(0.005102041f*d), 0.f, 0.f, 0.f);
+    }
 
     // render cats
     for(uint i=0; i < 8; i++)
     {
         // is collide with player?
-        if(caught == 0.f)
+        if(caught == 0.f && winner == 0)
         {
             const float xm = px+cx[i];
             const float ym = py+cy[i];
@@ -398,14 +401,7 @@ void main_loop()
         const float xm = px+pix;
         const float ym = py+piy;
         const float d = xm*xm + ym*ym;
-        if(d < 1.f && ft == 0.f)
-        {
-            ft = t+1.f;
-            if(pid > 23)
-            {
-                // make cats run from you?
-            }
-        }
+        if(d < 1.f && ft == 0.f){ft = t+1.f;} // signal pickup fade
         if(d < DRAW_DISTANCE)
         {
             mIdent(&model);
@@ -418,11 +414,21 @@ void main_loop()
                 {
                     ft = 0.f;
                     pid++;
-                    char nt[256];
-                    sprintf(nt, "🤩 %u 🤩", pid-10);
-                    glfwSetWindowTitle(wnd, nt);
-                    const uint pi = esRand(0, 2053)*2;
-                    pix = level_floor[pi], piy = level_floor[pi+1];
+                    if(pid > 23) // signal winner
+                    {
+                        winner=1;
+                        glClearColor(1.f, 1.f, 0.f, 0.f);
+                        glfwSetWindowTitle(wnd, "🌟 🥂 WINNER 🥂 🌟");
+                        char strts[16];timestamp(&strts[0]);printf("[%s] WINNER! You won!.\n", strts, pid-10);
+                    }
+                    else
+                    {
+                        char nt[256];
+                        sprintf(nt, "🤩 %u/14 🤩", pid-10);
+                        glfwSetWindowTitle(wnd, nt);
+                        const uint pi = esRand(0, 2053)*2;
+                        pix = level_floor[pi], piy = level_floor[pi+1];
+                    }
                 }
                 glEnable(GL_BLEND);
                 glUniform1f(opacity_id, ftd);
@@ -621,7 +627,7 @@ int main(int argc, char** argv)
     printf("James William Fletcher (github.com/mrbid)\n");
     printf("%s - Inspired by The Backrooms & Nextbots.\n", appTitle);
     printf("----\n");
-    printf("Follow the floating eye to obtain the trinkets before the demonic cats get to you!! There are 14 trinkets in total and the final trinket will have no floating eye to guide you!\n");
+    printf("Follow the floating eye to obtain the trinkets before the demonic cats get to you!! There are 14 trinkets in total and the final trinket will have no floating eye to guide you, instead the sky will turn more red the closer you are to it!\n");
     printf("----\n");
     int msaa = 16;
 #ifndef WEB
