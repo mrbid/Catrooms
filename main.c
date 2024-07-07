@@ -57,6 +57,7 @@ void timestamp(char* ts){const time_t tt=time(0);strftime(ts,16,"%H:%M:%S",local
     #include <emscripten/html5.h>
     #define GL_GLEXT_PROTOTYPES
     #define EGL_EGLEXT_PROTOTYPES
+    float tsx=0, tsy=0, tdx=0, tdy=0;
 #endif
 #define GLAD_GL_IMPLEMENTATION
 #include "inc/gl.h"
@@ -97,13 +98,13 @@ void timestamp(char* ts){const time_t tt=time(0);strftime(ts,16,"%H:%M:%S",local
 const char appTitle[]="The Catrooms";
 GLFWwindow* wnd;
 uint winw=1024, winh=768, ks[4]={0};
-float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
+float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect, ww, wh, rww, rwh;
 
 // camera vars
 #define FAR_DISTANCE 100.f
 #define DRAW_DISTANCE 225.f // 15*15
 uint lock_mouse = 0;
-uint free_look = 0;
+uint istouch = 0;
 double sens = 0.003;
 double mx,my,lx,ly;
 float xrot = 0.f;
@@ -159,18 +160,33 @@ void main_loop()
 // game logic
 //*************************************
 
+#ifdef WEB
+    // touch move
+    if(tdx != 0.f && tdy != 0.f)
+    {
+        float ttdx = tdx * 8.f;
+        float ttdy = tdy * 6.f;
+        if(ww > wh){ttdx *= ww/wh;}
+        if(wh > ww){ttdy *= wh/ww;}
+        if(ttdx > MOVE_SPEED){ttdx = MOVE_SPEED;}
+        else if(ttdx < -MOVE_SPEED){ttdx = -MOVE_SPEED;}
+        if(ttdy > MOVE_SPEED){ttdy = MOVE_SPEED;}
+        else if(ttdy < -MOVE_SPEED){ttdy = -MOVE_SPEED;}
+        px -= lookx.x * ttdx * dt, py -= lookx.y * ttdx * dt;
+        px -= lookz.x * ttdy * dt, py -= lookz.y * ttdy * dt;
+    }
+#endif
+
     // player inputs
-    mGetViewX(&lookx, view);
     float fms = MOVE_SPEED;
-    /**/ if(ks[0]==1){px -= lookx.x * MOVE_SPEED * dt, py -= lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // A
-    else if(ks[1]==1){px += lookx.x * MOVE_SPEED * dt, py += lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // D
-    /**/ if(ks[2]==1){px -= lookz.x * MOVE_SPEED * dt, py -= lookz.y * fms * dt;} // W
-    else if(ks[3]==1){px += lookz.x * MOVE_SPEED * dt, py += lookz.y * fms * dt;} // S
+    /**/ if(ks[0]==1){px -= lookx.x * STRAFE_SPEED * dt, py -= lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // A
+    else if(ks[1]==1){px += lookx.x * STRAFE_SPEED * dt, py += lookx.y * STRAFE_SPEED * dt; fms=STRAFE_SPEED;} // D
+    /**/ if(ks[2]==1){px -= lookz.x * fms * dt, py -= lookz.y * fms * dt;} // W
+    else if(ks[3]==1){px += lookz.x * fms * dt, py += lookz.y * fms * dt;} // S
 
     // camera
-    if(lock_mouse == 1)
+    if(lock_mouse == 1 || istouch == 1)
     {
-        glfwGetCursorPos(wnd, &mx, &my);
         static float sx=0.0,sy=0.0; // mouse smoothing
         sx = ((float)((lx-mx)*sens)+sx)*0.5f, xrot += sx, lx = mx;
     }
@@ -388,29 +404,32 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
 }
 void mouse_button_callback(GLFWwindow* wnd, int button, int action, int mods)
 {
-    if(action != GLFW_PRESS)
-    {
-        if(lock_mouse == 1 && button == GLFW_MOUSE_BUTTON_RIGHT){free_look=0;}
-        return;
-    }
     if(button == GLFW_MOUSE_BUTTON_LEFT)
     {
         if(lock_mouse == 0)
         {
             lock_mouse = 1;
+            istouch = 0; // could be bad
 #ifndef WEB
             glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             glfwGetCursorPos(wnd, &lx, &ly);
 #endif
         }
     }
-    else if(button == GLFW_MOUSE_BUTTON_RIGHT){free_look = 1;}
+}
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if(istouch == 1){return;}
+    mx = xpos, my = ypos;
+    sens = 0.003f;
 }
 void window_size_callback(GLFWwindow* wnd, int width, int height)
 {
     winw = width, winh = height;
+    ww = (float)winw, wh = (float)winh;
+    rww = 1.f/ww, rwh = 1.f/wh;
     glViewport(0, 0, winw, winh);
-    aspect = (float)winw / (float)winh;
+    aspect = ww / wh;
     mIdent(&projection);
     mPerspective(&projection, 60.f, aspect, 0.01f, FAR_DISTANCE);
     glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
@@ -422,6 +441,44 @@ EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent,
     winh = uiEvent->documentBodyClientHeight;
     window_size_callback(wnd, winw, winh);
     emscripten_set_canvas_element_size("canvas", winw, winh);
+    return EM_FALSE;
+}
+EM_BOOL emscripten_touchstart_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
+{
+    if(istouch == 0){istouch = 1;}
+    if(touchEvent->touches[0].clientX*rww > 0.5f) // look side
+    {
+        lx = touchEvent->touches[0].clientX;
+        ly = touchEvent->touches[0].clientY;
+        mx = lx;
+        my = ly;
+        sens = 0.006f;
+    }
+    else // move side
+    {
+        tsx = touchEvent->touches[0].clientX*rww;
+        tsy = touchEvent->touches[0].clientY*rwh;
+    }
+    return EM_FALSE;
+}
+EM_BOOL emscripten_touchend_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
+{
+    if(touchEvent->touches[0].clientX*rww < 0.5f){tsx=0, tsy=0, tdx=0.f, tdy=0.f;}
+    return EM_FALSE;
+}
+EM_BOOL emscripten_touchmove_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
+{
+    if(touchEvent->touches[0].clientX*rww > 0.5f)
+    {
+        mx = touchEvent->touches[0].clientX;
+        my = touchEvent->touches[0].clientY;
+        //printf("T: %f %f\n", mx, my);
+    }
+    else if(tsx != 0.f && tsy != 0.f)
+    {
+        tdx = (tsx-(touchEvent->touches[0].clientX*rww))*3.f;
+        tdy = (tsy-(touchEvent->touches[0].clientY*rwh))*3.f;
+    }
     return EM_FALSE;
 }
 #endif
@@ -473,6 +530,7 @@ int main(int argc, char** argv)
     glfwSetWindowSizeCallback(wnd, window_size_callback);
     glfwSetKeyCallback(wnd, key_callback);
     glfwSetMouseButtonCallback(wnd, mouse_button_callback);
+    glfwSetCursorPosCallback(wnd, cursor_position_callback);
     glfwMakeContextCurrent(wnd);
     gladLoadGL(glfwGetProcAddress);
     glfwSwapInterval(1); // 0 for immediate updates, 1 for updates synchronized with the vertical retrace, -1 for adaptive vsync
@@ -520,6 +578,9 @@ int main(int argc, char** argv)
 
     // loop
 #ifdef WEB
+    emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_touchstart_event);
+    emscripten_set_touchend_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_touchend_event);
+    emscripten_set_touchmove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_touchmove_event);
     emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_resize_event);
     emscripten_set_main_loop(main_loop, 0, 1);
 #else
