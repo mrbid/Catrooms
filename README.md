@@ -1,6 +1,8 @@
 ![Screenshot of the TuxScape2 game](https://raw.githubusercontent.com/mrbid/Catrooms/main/screenshot.png)
 
-*Explore Space, collect all 20 emoji's to reveal 20 cool characters and try flying the other 68 space ships that are randomly dotted around.*
+*The Backrooms, catified. Find all 14 trinkets before the cat emojis get you!*
+
+Follow the floating eye to obtain the trinkets before the demonic cats get to you!! There are 14 trinkets in total and the final trinket will have no floating eye to guide you, instead the sky will turn more red the closer you are to it! Once you have won the game the sky will turn yellow.
 
 - **Play Online:** https://pushergames.itch.io/catrooms
 - **Flathub:** https://flathub.org/apps/com.voxdsp.TheCatrooms
