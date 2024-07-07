@@ -138,6 +138,8 @@ uint cm[8]; // cat mode, persuit or roam
 //*************************************
 void resetGame(uint mode)
 {
+    if(mode == 1){char strts[16];timestamp(&strts[0]);printf("[%s] Game Reset, you lose at level %u.\n", strts, pid-10);}
+
     px=0.f, py=0.f;
     const uint pi = esRand(0, 2053)*2;
     pix = level_floor[pi], piy = level_floor[pi+1];
@@ -153,7 +155,6 @@ void resetGame(uint mode)
         cm[i] = t+1.f;
     }
 
-    if(mode == 1){char strts[16];timestamp(&strts[0]);printf("[%s] Game Reset, you lose.\n", strts);}
     glfwSetWindowTitle(wnd, appTitle);
 }
 
@@ -356,19 +357,22 @@ void main_loop()
         mIdent(&model);
         mSetPos(&model, (vec){cx[i], cy[i], 0.f});
 
-        if(cm[i] == 1)
+        if(caught == 0.f)
         {
-            cdx[i] = cx[i]+px, cdy[i] = cy[i]+py;
-            const float len = 1.f/sqrtf(cdx[i]*cdx[i] + cdy[i]*cdy[i]);
-            cdx[i] *= len;
-            cdy[i] *= len;
+            if(cm[i] == 1)
+            {
+                cdx[i] = cx[i]+px, cdy[i] = cy[i]+py;
+                const float len = 1.f/sqrtf(cdx[i]*cdx[i] + cdy[i]*cdy[i]);
+                cdx[i] *= len;
+                cdy[i] *= len;
 
-            cx[i] -= cdx[i]*CAT_SPEED*dt, cy[i] -= cdy[i]*CAT_SPEED*dt; // move
+                cx[i] -= cdx[i]*CAT_SPEED*dt, cy[i] -= cdy[i]*CAT_SPEED*dt; // move
+            }
+            else{cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;} // move
         }
-        else{cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;} // move
 
         static const vec up_norm = (vec){0.f, 0.f, 1.f};
-        const vec dir_norm = (vec){cdx[i], cdy[i], 0.5f};
+        const vec dir_norm = (vec){cdx[i], cdy[i], 0.f};
         vec c;
         vCross(&c, up_norm, dir_norm);
         vNorm(&c);
