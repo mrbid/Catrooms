@@ -409,8 +409,6 @@ void mouse_button_callback(GLFWwindow* wnd, int button, int action, int mods)
         if(lock_mouse == 0)
         {
             lock_mouse = 1;
-            // istouch = 0;
-            // DRAW_DISTANCE = 225.f;
 #ifndef WEB
             glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             glfwGetCursorPos(wnd, &lx, &ly);
@@ -446,19 +444,21 @@ EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent,
 }
 EM_BOOL emscripten_touchstart_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
 {
+    // switch to touch mode
     if(istouch == 0){istouch = 1; DRAW_DISTANCE = 64.f;}
 
+    //move
+    tsx = touchEvent->touches[0].clientX*rww;
+    tsy = touchEvent->touches[0].clientY*rwh;
+
     // look
-    lx = touchEvent->touches[0].clientX;
-    ly = touchEvent->touches[0].clientY;
+    lx = touchEvent->touches[1].clientX;
+    ly = touchEvent->touches[1].clientY;
     mx = lx;
     my = ly;
     sens = 0.006f;
 
-    //move
-    tsx = touchEvent->touches[1].clientX*rww;
-    tsy = touchEvent->touches[1].clientY*rwh;
-
+    // ret
     return EM_FALSE;
 }
 EM_BOOL emscripten_touchend_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
@@ -468,18 +468,18 @@ EM_BOOL emscripten_touchend_event(int eventType, const EmscriptenTouchEvent *tou
 }
 EM_BOOL emscripten_touchmove_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
 {
-    // look
-    mx = touchEvent->touches[0].clientX;
-    my = touchEvent->touches[0].clientY;
-    //printf("T: %f %f\n", mx, my);
-    
     // move
     if(tsx != 0.f && tsy != 0.f)
     {
-        tdx = tsx-(touchEvent->touches[1].clientX*rww);
-        tdy = tsy-(touchEvent->touches[1].clientY*rwh);
+        tdx = tsx-(touchEvent->touches[0].clientX*rww);
+        tdy = tsy-(touchEvent->touches[0].clientY*rwh);
     }
 
+    // look
+    mx = touchEvent->touches[1].clientX;
+    my = touchEvent->touches[1].clientY;
+
+    // ret
     return EM_FALSE;
 }
 #endif
