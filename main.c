@@ -583,19 +583,25 @@ EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent,
 }
 EM_BOOL emscripten_touchstart_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
 {
-    // switch to touch mode
-    if(istouch == 0){istouch = 1; DRAW_DISTANCE = 64.f;}
-
-    //move
-    tsx = touchEvent->touches[0].clientX*rww;
-    tsy = touchEvent->touches[0].clientY*rwh;
-
-    // look
-    lx = touchEvent->touches[1].clientX;
-    ly = touchEvent->touches[1].clientY;
-    mx = lx;
-    my = ly;
-    sens = 0.006f;
+    if(istouch == 0){istouch = 1; DRAW_DISTANCE = 64.f;} // switch to touch mode
+    for(uint i=0; i<2; i++)
+    {
+        const float ncx = touchEvent->touches[i].clientX*rww;
+        if(touchEvent->touches[i].clientX == 0.f && touchEvent->touches[i].clientY == 0.f){continue;}
+        if(ncx <= 0.5f) //move
+        {
+            tsx = ncx;
+            tsy = touchEvent->touches[i].clientY*rwh;
+        }
+        else // look
+        {
+            lx = touchEvent->touches[i].clientX;
+            ly = touchEvent->touches[i].clientY;
+            mx = lx;
+            my = ly;
+            sens = 0.006f;
+        }
+    }
 
     // ret
     return EM_FALSE;
@@ -607,16 +613,24 @@ EM_BOOL emscripten_touchend_event(int eventType, const EmscriptenTouchEvent *tou
 }
 EM_BOOL emscripten_touchmove_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
 {
-    // move
-    if(tsx != 0.f && tsy != 0.f)
+    for(uint i=0; i<2; i++)
     {
-        tdx = tsx-(touchEvent->touches[0].clientX*rww);
-        tdy = tsy-(touchEvent->touches[0].clientY*rwh);
+        if(touchEvent->touches[i].clientX == 0.f && touchEvent->touches[i].clientY == 0.f){continue;}
+        const float ncx = touchEvent->touches[i].clientX*rww;
+        if(ncx <= 0.5f) //move
+        {
+            if(tsx != 0.f && tsy != 0.f)
+            {
+                tdx = tsx-(ncx);
+                tdy = tsy-(touchEvent->touches[i].clientY*rwh);
+            }
+        }
+        else // look
+        {
+            mx = touchEvent->touches[i].clientX;
+            my = touchEvent->touches[i].clientY;
+        }
     }
-
-    // look
-    mx = touchEvent->touches[1].clientX;
-    my = touchEvent->touches[1].clientY;
 
     // ret
     return EM_FALSE;
