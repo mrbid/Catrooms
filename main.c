@@ -258,39 +258,39 @@ void main_loop()
             esRenderModel();
         }
     }
-    esBindModel(0);
-    for(uint i = 0; i < wall_size; i+=2)
-    {
-        // lol brain melt time, yes this is mad!
-        const float xd = px+level_wall[i], yd = py+level_wall[i+1];
-        const float fxd = fabsf(xd), fyd = fabsf(yd);
-        const uint xif = fxd < 0.6f, yif = fyd < 0.6f;
-        if(xif && yif)
-        {
-            if(xif && fxd > fyd)
-            {
-                if(xd < 0.f){px -= 0.6f+xd;}
-                        else{px += 0.6f-xd;}
-            }
-            if(yif && fyd > fxd)
-            {
-                if(yd < 0.f){py -= 0.6f+yd;}
-                        else{py += 0.6f-yd;}
-            }
-        }
+    // esBindModel(0);
+    // for(uint i = 0; i < wall_size; i+=2)
+    // {
+    //     // lol brain melt time, yes this is mad!
+    //     const float xd = px+level_wall[i], yd = py+level_wall[i+1];
+    //     const float fxd = fabsf(xd), fyd = fabsf(yd);
+    //     const uint xif = fxd < 0.6f, yif = fyd < 0.6f;
+    //     if(xif && yif)
+    //     {
+    //         if(xif && fxd > fyd)
+    //         {
+    //             if(xd < 0.f){px -= 0.6f+xd;}
+    //                     else{px += 0.6f-xd;}
+    //         }
+    //         if(yif && fyd > fxd)
+    //         {
+    //             if(yd < 0.f){py -= 0.6f+yd;}
+    //                     else{py += 0.6f-yd;}
+    //         }
+    //     }
 
-        // render view distance
-        const float xm = px+level_wall[i];
-        const float ym = py+level_wall[i+1];
-        const float d = xm*xm + ym*ym;
-        if(d < DRAW_DISTANCE)
-        {
-            mIdent(&model);
-            mSetPos(&model, (vec){level_wall[i], level_wall[i+1], 0.f});
-            updateModelView();
-            esRenderModel();
-        }
-    }
+    //     // render view distance
+    //     const float xm = px+level_wall[i];
+    //     const float ym = py+level_wall[i+1];
+    //     const float d = xm*xm + ym*ym;
+    //     if(d < DRAW_DISTANCE)
+    //     {
+    //         mIdent(&model);
+    //         mSetPos(&model, (vec){level_wall[i], level_wall[i+1], 0.f});
+    //         updateModelView();
+    //         esRenderModel();
+    //     }
+    // }
 
     // change bg/clear color based on distance from pickup
     if(pid == 23)
@@ -311,7 +311,7 @@ void main_loop()
             const float xm = px+cx[i];
             const float ym = py+cy[i];
             const float d = xm*xm + ym*ym;
-            if(d < 0.3f){caught=t+6.f;}
+            if(d < 0.5f){caught=t+6.f;}
         }
 
         // is stuck?
