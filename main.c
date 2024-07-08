@@ -559,7 +559,7 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if(istouch == 1){return;}
     mx = xpos, my = ypos;
-    sens = 0.003f;
+    sens = 0.003;
 }
 void window_size_callback(GLFWwindow* wnd, int width, int height)
 {
@@ -599,7 +599,7 @@ EM_BOOL emscripten_touchstart_event(int eventType, const EmscriptenTouchEvent *t
             ly = touchEvent->touches[i].clientY;
             mx = lx;
             my = ly;
-            sens = 0.006f;
+            sens = 0.006;
         }
     }
 
