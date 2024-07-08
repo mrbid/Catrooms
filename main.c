@@ -311,7 +311,7 @@ void main_loop()
             const float xm = px+cx[i];
             const float ym = py+cy[i];
             const float d = xm*xm + ym*ym;
-            if(d < 1.f){caught=t+6.f;}
+            if(d < 0.3f){caught=t+6.f;}
         }
 
         // is stuck?
