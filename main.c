@@ -356,10 +356,7 @@ void main_loop()
             }
         }
 
-        // render cat looking at player
-        mIdent(&model);
-        mSetPos(&model, (vec){cx[i], cy[i], 0.f});
-
+        // movement
         if(caught == 0.f)
         {
             if(cm[i] == 1)
@@ -374,24 +371,33 @@ void main_loop()
             else{cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;} // move
         }
 
-        static const vec up_norm = (vec){0.f, 0.f, 1.f};
-        const vec dir_norm = (vec){cdx[i], cdy[i], 0.f};
-        vec c;
-        vCross(&c, up_norm, dir_norm);
-        vNorm(&c);
-        vec rup;
-        vCross(&rup, dir_norm, c);
-        model.m[0][0] = c.x;
-        model.m[0][1] = c.y;
-        model.m[0][2] = c.z;
-        model.m[2][0] = rup.x;
-        model.m[2][1] = rup.y;
-        model.m[2][2] = rup.z;
-        model.m[1][0] = -dir_norm.x;
-        model.m[1][1] = -dir_norm.y;
-        model.m[1][2] = -dir_norm.z;
-        updateModelView();
-        esBindRender(2+i);
+        // render cat looking at player with view distance
+        const float xm = px+cx[i];
+        const float ym = py+cy[i];
+        const float d = xm*xm + ym*ym;
+        if(d < DRAW_DISTANCE)
+        {
+            mIdent(&model);
+            mSetPos(&model, (vec){cx[i], cy[i], 0.f});
+            static const vec up_norm = (vec){0.f, 0.f, 1.f};
+            const vec dir_norm = (vec){cdx[i], cdy[i], 0.f};
+            vec c;
+            vCross(&c, up_norm, dir_norm);
+            vNorm(&c);
+            vec rup;
+            vCross(&rup, dir_norm, c);
+            model.m[0][0] = c.x;
+            model.m[0][1] = c.y;
+            model.m[0][2] = c.z;
+            model.m[2][0] = rup.x;
+            model.m[2][1] = rup.y;
+            model.m[2][2] = rup.z;
+            model.m[1][0] = -dir_norm.x;
+            model.m[1][1] = -dir_norm.y;
+            model.m[1][2] = -dir_norm.z;
+            updateModelView();
+            esBindRender(2+i);
+        }
     }
 
     // render pickup & collision
