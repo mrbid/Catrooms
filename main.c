@@ -537,7 +537,7 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
 }
 void mouse_button_callback(GLFWwindow* wnd, int button, int action, int mods)
 {
-    if(button == GLFW_MOUSE_BUTTON_LEFT)
+    if(action = GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT)
     {
         if(lock_mouse == 0)
         {
