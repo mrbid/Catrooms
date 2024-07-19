@@ -137,6 +137,22 @@ uint cm[8]; // cat mode, persuit or roam
 //*************************************
 // game functions
 //*************************************
+void resetCat(uint i)
+{
+    float d = 42.f;
+    do
+    {
+        const uint pi = esRand(0, 2053)*2;
+        cx[i] = level_floor[pi], cy[i] = level_floor[pi+1];
+        const float xm = px+cx[i];
+        const float ym = py+cy[i];
+        d = xm*xm + ym*ym;
+    }
+    while(d < 36.f);
+    lcx[i] = cx[i], lcy[i] = cy[i];
+    cdx[i]=1, cdy[i]=0;
+    cm[i] = t+1.f;
+}
 void resetGame(uint mode)
 {
     if(mode == 1){char strts[16];timestamp(&strts[0]);printf("[%s] Game Reset, you lose at level %u.\n", strts, pid-10);}
@@ -148,14 +164,7 @@ void resetGame(uint mode)
     caught = 0.f;
     winner = 0;
 
-    for(uint i=0; i < 8; i++)
-    {
-        const uint pi = esRand(0, 2053)*2;
-        cx[i] = level_floor[pi], cy[i] = level_floor[pi+1];
-        lcx[i] = cx[i], lcy[i] = cy[i];
-        cdx[i]=1, cdy[i]=0;
-        cm[i] = t+1.f;
-    }
+    for(uint i=0; i < 8; i++){resetCat(i);}
 
     glfwSetWindowTitle(wnd, appTitle);
 }
@@ -333,6 +342,9 @@ void main_loop()
             lcy[i] = cy[i];
             cnt[i] = t+esRand(1.f, 3.f);
         }
+
+        // is out of bounds?
+        if(-cx[i] < -44.f || -cx[i] > 14.f || -cy[i] < -28.f || -cy[i] > 29.f){resetCat(i);}
 
         // cats need to brain melt too obviously
         for(uint j=0; j < wall_size; j+=2)
