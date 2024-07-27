@@ -219,8 +219,9 @@ void main_loop()
     // camera
     if(lock_mouse == 1 || istouch == 1)
     {
-        static float sx=0.0; // mouse smoothing
-        sx = ((float)((lx-mx)*sens)+sx)*0.5f, xrot += sx, lx = mx;
+        //static float sx=0.0; // mouse smoothing
+        //sx = ((float)((lx-mx)*sens)+sx)*0.5f, xrot += sx, lx = mx;
+        xrot += ((float)((lx-mx)*sens)), lx = mx;
     }
     mIdent(&view);
     if(caught != 0.f)
