@@ -163,6 +163,7 @@ void resetGame(uint mode)
     pid = 10;
     caught = 0.f;
     winner = 0;
+    xrot = 0.f;
 
     for(uint i=0; i < 8; i++){resetCat(i);}
 
