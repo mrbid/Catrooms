@@ -316,6 +316,21 @@ void main_loop()
     // render cats
     for(uint i=0; i < 8; i++)
     {
+        // movement
+        if(caught == 0.f)
+        {
+            if(cm[i] == 1)
+            {
+                cdx[i] = cx[i]+px, cdy[i] = cy[i]+py;
+                const float len = 1.f/sqrtf(cdx[i]*cdx[i] + cdy[i]*cdy[i]);
+                cdx[i] *= len;
+                cdy[i] *= len;
+
+                cx[i] -= cdx[i]*CAT_SPEED*dt, cy[i] -= cdy[i]*CAT_SPEED*dt; // move
+            }
+            else{cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;} // move
+        }
+        
         // is collide with player?
         if(caught == 0.f && winner == 0)
         {
@@ -368,21 +383,6 @@ void main_loop()
                             else{cy[i] += colb-yd;}
                 }
             }
-        }
-
-        // movement
-        if(caught == 0.f)
-        {
-            if(cm[i] == 1)
-            {
-                cdx[i] = cx[i]+px, cdy[i] = cy[i]+py;
-                const float len = 1.f/sqrtf(cdx[i]*cdx[i] + cdy[i]*cdy[i]);
-                cdx[i] *= len;
-                cdy[i] *= len;
-
-                cx[i] -= cdx[i]*CAT_SPEED*dt, cy[i] -= cdy[i]*CAT_SPEED*dt; // move
-            }
-            else{cx[i] -= cdx[i]*MOVE_SPEED*dt, cy[i] -= cdy[i]*MOVE_SPEED*dt;} // move
         }
 
         // render cat looking at player with view distance
